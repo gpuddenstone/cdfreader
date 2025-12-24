@@ -14,6 +14,8 @@ def process_args()->dict[str,str]:
     parser.add_argument("-file","-f", required=True, help="Absolute path for file to read.  Use wildcards for multiple files")
     parser.add_argument("-metadata", "-m",action="store_true",help="Read file metadata only")
     parser.add_argument("-dryrun", "-d", action="store_true", help="Don't save to db")
+    parser.add_argument("-commit_batching", "-b", required=False, default=0,type=int, help="Number of inserts before committing")
+    parser.add_argument("-maxrecords", "-max", required=False, default=0, help="Maximum records to load")
     parser.add_argument("-verbose", "-v", action="store_true", help="Increase output verbosity")
     parser.add_argument("-host", help="postgres host", required=False,  default="localhost")
     parser.add_argument("-port", help="postgres port", required=False, default="5432")
@@ -53,7 +55,11 @@ def main():
             len(args["db"]) == 0)
     if (args.get("metadata","")):
         display_dataset_metadata(get_file_dataset(file_names[0]))
-    process(file_names=file_names,args=args,nodb=nodb,verbose=args.get('verbose',False))
+    process(file_names=file_names,
+            args=args,
+            nodb=nodb,
+            batch_commits=args.get('commit_batching',0),
+            verbose=args.get('verbose',False))
 
 if __name__ == "__main__":
     main()

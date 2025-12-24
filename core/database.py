@@ -46,6 +46,7 @@ class Database:
 class Db:
     def __init__(self,args:dict[str,str]):
         self.db = Database(args)
+        self.cursor = None
 
     def __enter__(self):
         return self
@@ -59,37 +60,49 @@ class Db:
             return curs.fetchall()
 
 
-    def insert(self, insert_str: str, parms: Sequence = None):
-        with self.db.cursor() as curs:
-            if parms is None:
-                curs.execute(insert_str)
-            else:
-                curs.execute(insert_str, parms)
-        self.db.commit()
-
-    def insert_and_get_id(self, insert_str: str, parms: Sequence = None)->int:
+    def insert(self, insert_str: str,
+               with_get_id: bool = False,
+               parms: Sequence = None) -> None | int:
         id_to_ret = 0
         with self.db.cursor() as curs:
             if parms is None:
                 curs.execute(insert_str)
             else:
                 curs.execute(insert_str, parms)
-            id_to_ret = curs.fetchone()
+            if with_get_id:
+                id_to_ret = curs.fetchone()[0]
         self.db.commit()
-        return id_to_ret
+        if with_get_id:
+            return id_to_ret
 
-
-    def insert_continuous(self, insert_str: str, curs, parms: Sequence = None):
-        if parms is None:
-            curs.execute(insert_str)
-        else:
-            curs.execute(insert_str, parms)
-
-    def commit(self)->None:
-        self.db.commit()
 
     def get_cursor(self):
         return self.db.cursor()
+
+    def insert_continuous(self, insert_str: str,
+                          with_get_id: bool = False,
+                          parms: Sequence = None)-> None | int:
+        id_to_ret = 0
+        if self.cursor is None:
+            self.cursor = self.get_cursor()
+        if parms is None:
+            self.cursor.execute(insert_str)
+        else:
+            self.cursor.execute(insert_str, parms)
+        if with_get_id:
+            id_to_ret = self.cursor.fetchone()[0]
+        if with_get_id:
+            return id_to_ret
+
+    def close_cursor(self):
+        if self.cursor is not None:
+            self.cursor.close()
+        self.cursor = None
+
+    def commit(self)->None:
+        self.close_cursor()
+        self.db.commit()
+
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.db.close()
