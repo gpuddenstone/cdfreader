@@ -11,3 +11,14 @@ CREATE TABLE IF NOT EXISTS methane_data (
     longitude DOUBLE PRECISION NOT NULL,
     methane DOUBLE PRECISION NOT NULL
 );
+CREATE TABLE IF NOT EXISTS methane_data_by_country (
+    methane_data_by_country_id SERIAL PRIMARY KEY,
+    country_name VARCHAR(250) UNIQUE NOT NULL,
+    processed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS methane_data_by_country_by_year (
+    methane_data_by_country_by_year_id SERIAL PRIMARY KEY,
+    methane_data_by_country_id INT REFERENCES methane_data_by_country(methane_data_by_country_id),
+    year INT NOT NULL,
+    carbon_tons REAL NOT NULL
+);

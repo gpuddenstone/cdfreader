@@ -203,7 +203,7 @@ def process(file_names:list[str],
     number of files processed: {files_processed}    
     run start time={run_start_time}            
     run end time={run_end_time}            
-    mean records per second{total_records / duration.seconds}            
+    mean records per second={total_records / duration.seconds}            
          """)
 
 
