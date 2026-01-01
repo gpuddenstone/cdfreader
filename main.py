@@ -16,6 +16,7 @@ def process_args()->dict[str,str]:
     parser.add_argument("-dryrun", "-d", action="store_true", help="Don't save to db")
     parser.add_argument("-commit_batching", "-b", required=False, default=0,type=int, help="Number of inserts before committing")
     parser.add_argument("-maxrecords", "-max", required=False, default=0, help="Maximum records to load")
+    parser.add_argument("-csv", "-c", action="store_true", help="Read counties by year")
     parser.add_argument("-verbose", "-v", action="store_true", help="Increase output verbosity")
     parser.add_argument("-host", help="postgres host", required=False,  default="localhost")
     parser.add_argument("-port", help="postgres port", required=False, default="5432")

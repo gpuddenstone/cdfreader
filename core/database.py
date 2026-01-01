@@ -1,7 +1,7 @@
 import sys
 from typing import Sequence
 import psycopg2
-
+from psycopg2.extras import NamedTupleCursor
 
 class Database:
     def __init__(self,args:dict[str,str]):
@@ -17,7 +17,8 @@ class Database:
                     dbname = args["db"],
                     user = args["user"],
                     password = args["password"],
-                    port = args["port"])
+                    port = args["port"],
+                    cursor_factory=NamedTupleCursor)
         except psycopg2.OperationalError as e:
             print(f"Could not connect to Database: {e}")
             sys.exit(1)

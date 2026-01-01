@@ -170,6 +170,75 @@ def methane_specific(file_name:str,
     return records_inserted
 
 
+
+def add_methane_by_year_record(fileline:str,
+                               index:int,
+            args:dict[str,str],
+            nodb:bool=False,
+            verbose:bool=False)->int:
+    """
+
+    """
+   # see if there is an associated xml file, and if so then process it
+    records_inserted=0
+    if index==0:
+        return 0
+    vals=fileline.split(",")
+    entity=vals[0]
+    code=vals[1]
+    year=vals[2]
+    quantity=vals[3]
+    if len(entity)==0 or len(year)==0 or len(quantity)==0:
+        print(f'problem with line {index}, which looked like this={fileline}.')
+        sys.exit(1)
+    country_id =Db(args=args).query("SELECT methane_data_by_country_id FROM methane_data_by_country WHERE country_name=%s",(entity,))
+    if len(country_id)==0:
+        country_id = Db(args=args).insert(insert_str=f'INSERT INTO methane_data_by_country (country_name) values (%s) RETURNING methane_data_by_country_id',
+                                          with_get_id=True,
+                                          parms=(entity,))
+    cid=country_id if isinstance(country_id,int) else (country_id[0]).methane_data_by_country_id #if type(country_id)==int else country_id[0]
+
+    db=Db(args=args)
+    insert_str = 'INSERT INTO methane_data_by_country_by_year (methane_data_by_country_id,year,carbon_tons) values (%s,%s,%s)'
+
+    parms=(cid, int(year), float(quantity),)
+    db.insert(insert_str=insert_str,with_get_id=False,parms=parms)
+    return 1
+
+
+
+
+
+
+
+def methane_by_year(file_name:str,args:dict[str,str])->int:
+    recs_processed=0
+    f=""
+    i=0
+    if not path.exists(file_name):
+        print(f'could not find file {file_name}')
+        return
+    try:
+        with open(file_name, 'r') as file:
+            for index,line in enumerate(file):
+                # Process each line here
+                f=line
+                i=index
+                recs_processed=+add_methane_by_year_record(fileline=line.strip(),
+                                                           index=index,
+                                                           args=args)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        print(f"line={f}, line num={i}")
+    return recs_processed
+
+
+
+
+
+
+
+
 def process(file_names:list[str],
             args:dict[str,str],
             batch_commits:int=0,
@@ -187,7 +256,10 @@ def process(file_names:list[str],
     total_records=0
     files_processed=0
     for file_name in file_names:
-        records_inserted=methane_specific(file_name=file_name,
+        if args.get("csv",0):
+            records_inserted=methane_by_year(file_name=file_name,args=args)
+        else:
+            records_inserted=methane_specific(file_name=file_name,
                         args=args,
                         batch_commits=batch_commits,
                         nodb=nodb,
